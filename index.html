@@ -24,20 +24,66 @@
                 color: gray;
                 font-size: 1.5rem;
             }
+
+            input 
+            {
+                position: absolute;
+                bottom: 1rem;
+                left: 1rem;
+            }
+
+            #quotation 
+            {
+                position: absolute;
+                top: 0;
+                font-size: 1.5rem;
+                color: #444;
+                display: none;
+            }
+            
+            i
+            {
+                color: #555;
+                font-family: 'Times New Roman', Times, serif;
+            }
         </style>
     </head>
     <body>
         <h1 id="timer">0</h1>
         <p id="clock">00:00</p>
+        <p id="quotation"><i>Focus</i> - Please</p>
+        <input type="checkbox" name="quote" id="quote">
         <script>
             const timer = document.getElementById("timer");
             const clock = document.getElementById("clock");
+
+            const quote = document.getElementById("quote");
+            const quotation = document.getElementById("quotation");
+            
             const begin = new Date();
-            clock.innerHTML = begin.getHours() + ":" + begin.getMinutes();
+            clock.innerHTML = begin.getHours().toString().padStart(2, "0") + ":" + begin.getMinutes().toString().padStart(2, "0");
             let highscore = parseInt(localStorage.getItem("score")) || 0;
             let highscoreDisplay = highscore.toString();
             timer.innerHTML = `0<span style="font-size: 2rem; color: gray;">/${ highscoreDisplay }</span>`;
             let interval;
+
+            let wantquote = JSON.parse(localStorage.getItem("quote"));
+            quote.checked = wantquote;
+            if(wantquote)
+            {
+                quotation.style.display = "block";
+            }
+
+            quote.addEventListener("input", e => 
+            {
+                wantquote = quote.checked;
+                localStorage.setItem("quote", JSON.stringify(wantquote));
+                quotation.style.display = wantquote ? "block" : "none";
+                if(wantquote)
+                {
+                    updateQuote();
+                }
+            });
             
             let then = new Date();
             function updateTimer()
@@ -45,7 +91,7 @@
                 const now = new Date();
                 const difference = Math.floor((now - then) / 1000);
                 timer.innerHTML = difference + `<span style="font-size: 2rem; color: gray;">/${ highscoreDisplay }</span>`;
-                clock.innerHTML = now.getHours() + ":" + now.getMinutes();
+                clock.innerHTML = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0");
                 if(difference >= highscore)
                 {
                     highscore = difference;
@@ -54,15 +100,38 @@
                 }
             }
 
+            async function updateQuote()
+            {
+                const res = await fetch("https://corsproxy.io/?url=https://buddha-api.com/api/random", { mode: "cors", method: "GET" });
+                const json = await res.json();
+
+                quotation.innerHTML = `"<i>${ json.text }</i>" - ${ json.byName }`;
+            }
+
+            setInterval(async() => 
+            {
+                if(wantquote)
+                {
+                    updateQuote();
+                }
+            }, 60000);
+
+            if(wantquote)
+            {
+                updateQuote();
+            }
+
             function startTimer()
             {
                 document.body.style.cursor = "none";
                 then = new Date();
                 interval = setInterval(() => updateTimer(), 1000);
+                quote.style.display = "none";
             }
 
             function clearTimer()
             {
+                quote.style.display = "block";
                 let highscore = parseInt(localStorage.getItem("score")) || 0;
                 highscoreDisplay = highscore.toString();
                 document.body.style.cursor = "pointer";
@@ -74,7 +143,7 @@
                 timer.innerHTML = `0<span style="font-size: 2rem; color: gray;">/${ highscoreDisplay }</span>`;
             }
             
-            document.addEventListener("click", () => 
+            timer.addEventListener("click", () => 
             {
                 if(document.fullscreenElement)
                 {
