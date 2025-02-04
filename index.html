@@ -67,7 +67,7 @@
             timer.innerHTML = `0<span style="font-size: 2rem; color: gray;">/${ highscoreDisplay }</span>`;
             let interval;
 
-            let wantquote = JSON.parse(localStorage.getItem("quote"));
+            let wantquote = JSON.parse(localStorage.getItem("quote")) || false;
             quote.checked = wantquote;
             if(wantquote)
             {
